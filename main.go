@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-redis/redis/v8"
@@ -20,6 +19,11 @@ import (
 )
 
 var ctx = context.Background()
+var port string
+
+const (
+	DefaultWebPort = "8080"
+)
 
 func main() {
 	// check redis ready
@@ -72,8 +76,7 @@ func main() {
 	)
 
 	router.GET("/", func(w http.ResponseWriter, req bunrouter.Request) error {
-		// req embeds *http.Request and has all the same fields and methods
-		fmt.Println("Beijing Health Kit")
+		//fmt.Println("Beijing Health Kit")
 		return nil
 	})
 
@@ -96,14 +99,10 @@ func main() {
 		return err
 	})
 
-	port := os.Getenv("HT_PORT")
-
-	if len(port) < 1 {
-		port = ":9999"
-	}
-	err = http.ListenAndServe(port, router)
+	log.Infof("web ready on port %s ...", port)
+	err = http.ListenAndServe(":"+port, router)
 	if err != nil {
-		log.Error("Can't Open Web", err)
+		log.Errorf("Can't Open Web, as %s", err.Error())
 	}
 }
 
@@ -135,6 +134,13 @@ func init() {
 		viper.WatchConfig()
 	}
 	viper.AutomaticEnv()
+
+	viper.SetDefault("web.port", DefaultWebPort)
+	port = viper.GetString("web.port")
+	port2 := os.Getenv("WEB_PORT")
+	if len(port2) >= 2 {
+		port = port2
+	}
 }
 
 func levelOf(s string) log.Lvl {
