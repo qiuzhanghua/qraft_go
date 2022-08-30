@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-redis/redis/v8"
@@ -9,6 +10,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pseidemann/finish"
 	"github.com/segmentio/kafka-go"
+	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bunrouter"
@@ -27,6 +29,27 @@ const (
 )
 
 func main() {
+	flag.Usage = func() {
+		fmt.Printf("USAGE:\n%s [OPTIONS]\n\nOPTIONS:\n", os.Args[0])
+		flag.PrintDefaults()
+		fmt.Println()
+	}
+	var showVersion *bool
+	var showHelp *bool
+	showVersion = flag.BoolP("version", "v", false, "Show Version")
+	showHelp = flag.BoolP("help", "h", false, "Show Usage")
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("%s %s (%s %s)\n", "Qraft", AppVersion, AppRevision, AppBuildDate)
+	}
+	if *showHelp {
+		flag.Usage()
+	}
+	if *showVersion || *showHelp {
+		os.Exit(0)
+	}
+
 	// check redis ready
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil {
