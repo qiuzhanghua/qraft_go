@@ -27,6 +27,7 @@ func init() {
 	rdb = redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:    addrs,
 		Password: password,
+		PoolSize: 4,
 	})
 
 	//rdb := redis.NewClusterClient(&redis.ClusterOptions{

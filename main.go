@@ -11,6 +11,7 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -61,6 +62,25 @@ func main() {
 		// req embeds *http.Request and has all the same fields and methods
 		fmt.Println("Beijing Health Kit")
 		return nil
+	})
+
+	router.GET("/rdb", func(w http.ResponseWriter, req bunrouter.Request) error {
+		ans, err := rdb.Get(ctx, "hello").Result()
+
+		if err == nil {
+			_, _ = io.WriteString(w, ans)
+		}
+		return err
+	})
+
+	router.GET("/db", func(w http.ResponseWriter, req bunrouter.Request) error {
+
+		var ver string
+		err = db.NewRaw("SELECT version() as v").Scan(ctx, &ver)
+		if err == nil {
+			_, _ = io.WriteString(w, ver)
+		}
+		return err
 	})
 
 	port := os.Getenv("HT_PORT")
