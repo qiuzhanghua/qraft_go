@@ -25,5 +25,5 @@ post:
 	git restore autotag.go
 
 clean:
-	rm qraft*.*
 	rm qraft
+	rm qraft*.*
