@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/fsnotify/fsnotify"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/gommon/log"
 	"github.com/segmentio/kafka-go"
+	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
@@ -30,7 +32,15 @@ func main() {
 		_ = rdb.Close()
 	}(rdb)
 
-	log.Info("Redis ready...")
+	info, err := rdb.Info(ctx, "server").Result()
+	idx := strings.Index(info, "\n")
+	idx2 := strings.Index(info[idx+1:], "\n")
+	idx3 := strings.Index(info[idx+1:], ":")
+	redisVersion := ""
+	if idx >= 0 && idx2 >= 0 && idx3 >= 0 && idx2 > idx3+2 {
+		redisVersion = info[idx+idx3+2 : idx+idx2]
+	}
+	log.Infof("redis %s ready ...", redisVersion)
 
 	//err = mq.WriteMessages(context.Background(), kafka.Message{
 	//	Value: []byte("Hello, world!"),
@@ -41,6 +51,9 @@ func main() {
 		_ = mq.Close()
 	}(mq)
 
+	// test for mysql/pg only
+	// for mssql     select @@version as v
+	// for sqlite    SELECT sqlite_version() as v
 	var ver string
 	err = db.NewRaw("SELECT version() as v").Scan(ctx, &ver)
 	if err != nil {
@@ -50,7 +63,7 @@ func main() {
 	defer func(db *bun.DB) {
 		_ = db.Close()
 	}(db)
-	log.Infof("MySQL %s ready...", ver)
+	log.Infof("%s %s ready ...", dbtype, ver)
 
 	router := bunrouter.New(
 		bunrouter.WithMiddleware(reqlog.NewMiddleware(
@@ -95,7 +108,7 @@ func main() {
 }
 
 func init() {
-	log.SetPrefix("ht")
+	log.SetPrefix("qraft")
 	format := strings.ToLower(os.Getenv("LOGGING_FORMAT"))
 	if format != "json" {
 		log.SetHeader(`${time_rfc3339_nano}, ${prefix}, ${level} ${short_file}(${line})`)
@@ -106,6 +119,22 @@ func init() {
 	log.SetLevel(x)
 	log.SetLevel(log.DEBUG)
 
+	viper.SetConfigName("config") // name of config file (without extension)
+	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath(".")
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Warn("config file not found!")
+		} else {
+			log.Errorf("config file error: %s", err.Error())
+		}
+	} else {
+		viper.OnConfigChange(func(e fsnotify.Event) {
+			log.Infof("Config file changed: %s, REBOOT please.", e.Name)
+		})
+		viper.WatchConfig()
+	}
+	viper.AutomaticEnv()
 }
 
 func levelOf(s string) log.Lvl {

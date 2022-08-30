@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/spf13/viper"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -9,25 +11,41 @@ import (
 
 var rdb *redis.ClusterClient
 
-const DefaultRedisAddress string = "localhost:7001,localhost:7002,localhost:7003,localhost:7004,localhost:7005,localhost:7006"
-
-const DefaultPassword = ""
+const (
+	DefaultRedisAddress = "localhost:7001,localhost:7002,localhost:7003,localhost:7004,localhost:7005,localhost:7006"
+	DefaultPassword     = ""
+	DefaultPoolSize     = 3
+)
 
 func init() {
-	redisAddress := os.Getenv("REDIS_ADDRESS")
-	password := os.Getenv("REDIS_PASSWORD")
-	if len(redisAddress) < 5 {
-		redisAddress = DefaultRedisAddress
+	viper.SetDefault("redis.cluster", DefaultRedisAddress)
+	viper.SetDefault("redis.password", DefaultPassword)
+	viper.SetDefault("redis.poolsize", DefaultPoolSize)
+
+	redisAddress := viper.GetString("redis.cluster")
+	addr := os.Getenv("REDIS_CLUSTER")
+	if len(addr) >= 5 {
+		redisAddress = addr
 	}
-	if len(password) < 5 {
-		password = DefaultPassword
+
+	password := viper.GetString("redis.password")
+	p := os.Getenv("REDIS_PASSWORD")
+	if len(p) >= 4 {
+		password = p
+	}
+
+	poolsize := viper.GetInt("redis.poolsize")
+	sizeStr := os.Getenv("REDIS_POOLSIZE")
+	size, err := strconv.ParseInt(sizeStr, 0, 0)
+	if err == nil {
+		poolsize = int(size)
 	}
 
 	addrs := strings.Split(redisAddress, ",")
 	rdb = redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:    addrs,
 		Password: password,
-		PoolSize: 4,
+		PoolSize: poolsize,
 	})
 
 	//rdb := redis.NewClusterClient(&redis.ClusterOptions{

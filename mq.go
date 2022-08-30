@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/segmentio/kafka-go"
+	"github.com/spf13/viper"
 	"os"
 	"strings"
 	"time"
@@ -13,9 +14,11 @@ var mq *kafka.Writer
 const DefaultKafkaAddress = "localhost:9092,localhost:9093,localhost:9094,localhost:9095,localhost:9096,localhost:9097"
 
 func init() {
-	kafkaAddress := os.Getenv("KAFKA_ADDRESS")
-	if len(kafkaAddress) < 5 {
-		kafkaAddress = DefaultKafkaAddress
+	viper.SetDefault("kafka.cluster", DefaultKafkaAddress)
+	kafkaAddress := viper.GetString("kafka.cluster")
+	addresses := os.Getenv("KAFKA_CLUSTER")
+	if len(addresses) >= 5 {
+		kafkaAddress = addresses
 	}
 
 	addr := kafka.TCP(strings.Split(kafkaAddress, ",")...)

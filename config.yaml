@@ -1,0 +1,22 @@
+redis:
+  cluster: localhost:7001,localhost:7002,localhost:7003,localhost:7004,localhost:7005,localhost:7006
+  password:
+  poolsize: 3
+kafka:
+  cluster: localhost:9092,localhost:9093,localhost:9094,localhost:9095,localhost:9096,localhost:9097
+db:
+  type: mysql
+  url: app:app@/app
+
+#  other db supported
+#
+#  type: mssql
+#  url: sqlserver://sa:passWORD1@localhost:1433?database=test
+#
+#  type: sqlite
+#  url: file::memory:?cache=shared
+#
+#  type: pg
+#  url: postgres://postgres:@localhost:5432/test?sslmode=disable
+
+
