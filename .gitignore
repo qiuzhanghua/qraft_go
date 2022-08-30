@@ -1,4 +1,5 @@
 qraft_go
+qraft
 
 .vscode/*
 !.vscode/settings.json

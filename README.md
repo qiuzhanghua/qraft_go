@@ -1,6 +1,11 @@
+## Prerequisite
+```bash
+go install github.com/qiuzhanghua/autotag@latest
+```
+
 # Build and Run
 ```bash
-go build && BUNDEBUG=error ./qraft_go
+make && BUNDEBUG=error ./qraft
 ```
 
 # Redis
