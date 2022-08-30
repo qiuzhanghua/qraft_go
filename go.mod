@@ -8,6 +8,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/labstack/gommon v0.3.1
+	github.com/pseidemann/finish v1.2.0
 	github.com/segmentio/kafka-go v0.4.34
 	github.com/spf13/viper v1.12.0
 	github.com/uptrace/bun v1.1.8

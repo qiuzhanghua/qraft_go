@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/gommon/log"
+	"github.com/pseidemann/finish"
 	"github.com/segmentio/kafka-go"
 	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
@@ -99,11 +100,19 @@ func main() {
 		return err
 	})
 
-	log.Infof("web ready on port %s ...", port)
-	err = http.ListenAndServe(":"+port, router)
-	if err != nil {
-		log.Errorf("Can't Open Web, as %s", err.Error())
-	}
+	srv := &http.Server{Addr: ":" + port, Handler: router}
+
+	fin := finish.New()
+	fin.Add(srv)
+
+	log.Infof("qraft listen to %s ...", port)
+	go func() {
+		err = srv.ListenAndServe()
+		if err != http.ErrServerClosed {
+			log.Errorf("Can't Open Web, as %s", err.Error())
+		}
+	}()
+	fin.Wait()
 }
 
 func init() {
