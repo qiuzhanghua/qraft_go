@@ -13,6 +13,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 	"github.com/uptrace/bunrouter"
 	"github.com/uptrace/bunrouter/extra/reqlog"
 	"io"
@@ -23,6 +24,8 @@ import (
 
 var ctx = context.Background()
 var port string
+
+var versionSql string
 
 const (
 	DefaultWebPort = "8080"
@@ -79,11 +82,22 @@ func main() {
 		_ = mq.Close()
 	}(mq)
 
-	// test for mysql/pg only
-	// for mssql     select @@version as v
-	// for sqlite    SELECT sqlite_version() as v
+	switch db.Dialect().Name() {
+	case dialect.SQLite:
+		versionSql = "select sqlite_version() as v"
+		break
+	case dialect.PG, dialect.MySQL:
+		versionSql = "select version() as v"
+		break
+	case dialect.MSSQL:
+		versionSql = "select @@version as v"
+		break
+	default:
+		panic("not reached")
+	}
+
 	var ver string
-	err = db.NewRaw("SELECT version() as v").Scan(ctx, &ver)
+	err = db.NewRaw(versionSql).Scan(ctx, &ver)
 	if err != nil {
 		log.Error(err.Error())
 		panic(err)
@@ -116,7 +130,7 @@ func main() {
 	router.GET("/db", func(w http.ResponseWriter, req bunrouter.Request) error {
 
 		var ver string
-		err = db.NewRaw("SELECT version() as v").Scan(ctx, &ver)
+		err = db.NewRaw(versionSql).Scan(ctx, &ver)
 		if err == nil {
 			_, _ = io.WriteString(w, ver)
 		}
@@ -161,7 +175,7 @@ func init() {
 		}
 	} else {
 		viper.OnConfigChange(func(e fsnotify.Event) {
-			log.Infof("Config file changed: %s, REBOOT please.", e.Name)
+			log.Infof("Config file changed: %s, Restart me please.", e.Name)
 		})
 		viper.WatchConfig()
 	}
@@ -173,6 +187,9 @@ func init() {
 	if len(port2) >= 2 {
 		port = port2
 	}
+	RedisInit()
+	DbInit()
+	KafkaInit()
 }
 
 func levelOf(s string) log.Lvl {

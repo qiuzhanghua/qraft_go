@@ -26,7 +26,7 @@ const (
 	DefaultDbUrl  = "app:app@/app"
 )
 
-func init() {
+func DbInit() {
 	viper.SetDefault("db.type", DefaultDbType)
 	viper.SetDefault("db.url", DefaultDbUrl)
 	dbtype = strings.ToLower(viper.GetString("db.type"))

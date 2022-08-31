@@ -43,3 +43,13 @@ err = db.NewRaw("SELECT version() as v").Scan(ctx, &ver)
 ```
 约为32k qps.
 
+
+
+# Create MSSQL user
+login as sa, and
+```sql
+create login app with password='App@123456';
+use app;
+CREATE USER app FROM LOGIN app;
+GRANT CONTROL ON DATABASE::app TO app;
+```

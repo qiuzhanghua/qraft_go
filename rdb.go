@@ -17,7 +17,7 @@ const (
 	DefaultPoolSize     = 3
 )
 
-func init() {
+func RedisInit() {
 	viper.SetDefault("redis.cluster", DefaultRedisAddress)
 	viper.SetDefault("redis.password", DefaultPassword)
 	viper.SetDefault("redis.poolsize", DefaultPoolSize)
