@@ -7,6 +7,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/pseidemann/finish"
 	"github.com/segmentio/kafka-go"
@@ -14,9 +15,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect"
-	"github.com/uptrace/bunrouter"
-	"github.com/uptrace/bunrouter/extra/reqlog"
-	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -107,37 +105,27 @@ func main() {
 	}(db)
 	log.Infof("%s %s ready ...", dbtype, ver)
 
-	router := bunrouter.New(
-		bunrouter.WithMiddleware(reqlog.NewMiddleware(
-			reqlog.FromEnv("BUNDEBUG"),
-		)),
-	)
-
-	router.GET("/", func(w http.ResponseWriter, req bunrouter.Request) error {
-		//fmt.Println("Beijing Health Kit")
-		return nil
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
 	})
-
-	router.GET("/rdb", func(w http.ResponseWriter, req bunrouter.Request) error {
+	e.GET("/rdb", func(c echo.Context) error {
 		ans, err := rdb.Get(ctx, "hello").Result()
-
 		if err == nil {
-			_, _ = io.WriteString(w, ans)
+			return c.String(http.StatusOK, ans)
 		}
 		return err
 	})
-
-	router.GET("/db", func(w http.ResponseWriter, req bunrouter.Request) error {
-
+	e.GET("/db", func(c echo.Context) error {
 		var ver string
 		err = db.NewRaw(versionSql).Scan(ctx, &ver)
 		if err == nil {
-			_, _ = io.WriteString(w, ver)
+			return c.String(http.StatusOK, ver)
 		}
 		return err
 	})
 
-	srv := &http.Server{Addr: ":" + port, Handler: router}
+	srv := &http.Server{Addr: ":" + port, Handler: e}
 
 	fin := finish.New()
 	fin.Add(srv)
