@@ -10,6 +10,7 @@ require (
 	github.com/labstack/gommon v0.3.1
 	github.com/pseidemann/finish v1.2.0
 	github.com/segmentio/kafka-go v0.4.34
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
 	github.com/uptrace/bun v1.1.8
 	github.com/uptrace/bun/dialect/mssqldialect v1.1.8
@@ -49,7 +50,6 @@ require (
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

@@ -114,7 +114,7 @@ func main() {
 	)
 
 	router.GET("/", func(w http.ResponseWriter, req bunrouter.Request) error {
-		//fmt.Println("Beijing Health Kit")
+		_, _ = io.WriteString(w, "Hello, world!")
 		return nil
 	})
 
